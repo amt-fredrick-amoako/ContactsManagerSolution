@@ -1,0 +1,18 @@
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace Entities
+{
+    /// <summary>
+    /// Domain model for storing Country details
+    /// </summary>
+    public class Country
+    {
+        [Key]
+        public Guid CountryID { get; set; }
+
+
+        public string? CountryName { get; set; }
+        //Navigation Property
+        public virtual ICollection<Person>? Persons { get; set; }
+    }
+}
