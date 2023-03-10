@@ -57,9 +57,11 @@ app.UseHttpLogging();
 if (builder.Environment.IsEnvironment("Test") == false)
     Rotativa.AspNetCore.RotativaConfiguration.Setup("wwwroot", wkhtmltopdfRelativePath: "Rotativa");//add file to middleware chain
 
-app.UseStaticFiles();
-app.UseRouting();
-app.MapControllers();
+app.UseStaticFiles(); 
+app.UseRouting(); //Identify action methods
+app.UseAuthentication();//Read Identity cookie
+app.UseAuthorization(); //validates permissions of the user
+app.MapControllers(); //execute the filter pipeline (action + filters)
 
 
 app.Run();

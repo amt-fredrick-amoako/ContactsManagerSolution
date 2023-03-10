@@ -1,5 +1,9 @@
-﻿using CRUDExample.Filters.ActionFilters;
+﻿using ContactsManager.Core.Domain.IdentityEntities;
+using CRUDExample.Filters.ActionFilters;
 using Entities;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Repositories;
 using RepositoryContracts;
@@ -40,13 +44,43 @@ namespace CRUDExample
             services.AddScoped<IPersonsDeleteService, PersonsDeleteService>();
             services.AddScoped<IPersonsRepository, PersonsRepository>();
             services.AddScoped<ICountriesRepository, CountriesRepository>();
+
+            services.AddTransient<PersonsListActionFilter>();
             //Add PersonsDbContext to the IoC
             services.AddDbContextPool<ApplicationDbContext>(options =>
             {
                 options.UseSqlServer(configuration.GetConnectionString("DefaultConnection"));
             });
 
-            services.AddTransient<PersonsListActionFilter>();
+
+            //Enable Identity in this project                                              
+            services.AddIdentity<ApplicationUser, ApplicationRole>((options) =>
+            {
+                //Set password rules to follow
+                options.Password.RequiredLength = 6;
+                options.Password.RequireNonAlphanumeric = false;
+                options.Password.RequireUppercase = false;
+                options.Password.RequireLowercase = true;
+                options.Password.RequireDigit = false;
+                options.Password.RequiredUniqueChars = 3;
+            })
+                //where to store the data{App Layer}
+                .AddEntityFrameworkStores<ApplicationDbContext>()
+                .AddDefaultTokenProviders()
+                //Repository layer to use
+                .AddUserStore<UserStore<ApplicationUser, ApplicationRole, ApplicationDbContext, Guid>>()
+                .AddRoleStore<RoleStore<ApplicationRole, ApplicationDbContext, Guid>>();
+
+            services.AddAuthorization(options =>
+            {
+                //enforce authorization policy (user must be authenticated) for all the action methods
+                options.FallbackPolicy = new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build();
+            });
+
+            services.ConfigureApplicationCookie(options =>
+            {
+                options.LoginPath = "/Account/Login";
+            });
 
             //logging http request and response
             services.AddHttpLogging(options =>
